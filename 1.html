@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Roll Number</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        textarea, button, select {
+            display: block;
+            margin: 10px 0;
+        }
+        #response {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON Processor</h1>
+    <textarea id="jsonInput" placeholder='Enter JSON' rows='4' cols='50'></textarea>
+    <button onclick="submitJson()">Submit</button>
+    
+    <select id="dropdownMenu" multiple style="display: none;">
+        <option value="characters">Characters</option>
+        <option value="numbers">Numbers</option>
+        <option value="highestAlphabet">Highest alphabet</option>
+    </select>
+    
+    <div id="response"></div>
+    
+    <script>
+        async function submitJson() {
+            const input = document.getElementById('jsonInput').value;
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const responseDiv = document.getElementById('response');
+            
+            try {
+                // Validate JSON
+                const jsonData = JSON.parse(input);
+                
+                // Make API call
+                const result = await fetch('https://testbfhl.herokuapp.com/bfhl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                });
+
+                const data = await result.json();
+
+                // Check if response was successful
+                if (data.is_success) {
+                    dropdownMenu.style.display = 'block';
+                    displayResponse(data);
+                } else {
+                    responseDiv.innerHTML = '<p>Operation failed.</p>';
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<p>Invalid JSON format or API error.</p>';
+            }
+        }
+
+        function displayResponse(data) {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const responseDiv = document.getElementById('response');
+            
+            const selectedOptions = Array.from(dropdownMenu.selectedOptions).map(option => option.value);
+            
+            let content = '';
+            
+            if (selectedOptions.includes('characters') && data.characters) {
+                content += `<div>Characters: ${data.characters.join(', ')}</div>`;
+            }
+            
+            if (selectedOptions.includes('numbers') && data.numbers) {
+                content += `<div>Numbers: ${data.numbers.join(', ')}</div>`;
+            }
+            
+            if (selectedOptions.includes('highestAlphabet') && data.highestAlphabet) {
+                content += `<div>Highest alphabet: ${data.highestAlphabet}</div>`;
+            }
+            
+            responseDiv.innerHTML = content;
+        }
+    </script>
+</body>
+</html>
